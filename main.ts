@@ -23,6 +23,7 @@ let Empfangene_Daten = ""
 DFRobotMaqueenPlus.I2CInit()
 radio.setGroup(1)
 serial.redirectToUSB()
+let RoboterAktiv = true
 basic.forever(function () {
     if (FunkDatenImpuls) {
         if (Empfangene_Daten.substr(0, 4) == "send") {
@@ -32,6 +33,9 @@ basic.forever(function () {
                 serial.writeValue("R1," + convertToText(Sensordaten), 0)
             }
         } else {
+            if (true) {
+            	
+            }
             Empfangenes_Array = Empfangene_Daten.split(",")
             Received1 = parseFloat(Empfangenes_Array[0])
             Received2 = parseFloat(Empfangenes_Array[1])
@@ -75,5 +79,8 @@ basic.forever(function () {
             }
             FunkDatenImpuls = false
         }
+    }
+    if (RoboterAktiv == false) {
+        DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
     }
 })
