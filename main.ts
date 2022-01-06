@@ -25,10 +25,12 @@ radio.setGroup(1)
 serial.redirectToUSB()
 basic.forever(function () {
     if (FunkDatenImpuls) {
-        if (Empfangene_Daten == "send1") {
-            Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
-            radio.sendString(convertToText(Sensordaten))
-            serial.writeValue(convertToText(Sensordaten), 0)
+        if (Empfangene_Daten.substr(0, 4) == "send") {
+            if (Empfangene_Daten.substr(0, 5) == "send1") {
+                Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
+                radio.sendString(convertToText(Sensordaten))
+                serial.writeValue(convertToText(Sensordaten), 0)
+            }
         } else {
             Empfangenes_Array = Empfangene_Daten.split(",")
             Received1 = parseFloat(Empfangenes_Array[0])
