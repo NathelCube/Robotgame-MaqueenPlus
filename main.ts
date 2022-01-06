@@ -28,8 +28,8 @@ basic.forever(function () {
         if (Empfangene_Daten.substr(0, 4) == "send") {
             if (Empfangene_Daten.substr(0, 5) == "send1") {
                 Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
-                radio.sendString(convertToText(Sensordaten))
-                serial.writeValue(convertToText(Sensordaten), 0)
+                radio.sendString("R1," + convertToText(Sensordaten))
+                serial.writeValue("R1," + convertToText(Sensordaten), 0)
             }
         } else {
             Empfangenes_Array = Empfangene_Daten.split(",")
