@@ -1,44 +1,20 @@
-// Zum testen
-radio.onReceivedString(function (receivedString) {
-    Empfangene_Daten = receivedString
-    FunkDatenImpuls = true
-})
-/**
- * Motor Richtung:
- * 
- * Wahr - Vorwärts oder Stillstand
- * 
- * Falsch - Rückwärts
- */
-let Motor_Rechts = 0
-let Motor_Rechts_Richtung = false
-let Motor_Links = 0
-let Motor_Links_Richtung = false
-let Received2 = 0
-let Received1 = 0
-let Empfangenes_Array: string[] = []
-let Sensordaten = ""
-let FunkDatenImpuls = false
-let Empfangene_Daten = ""
-DFRobotMaqueenPlus.I2CInit()
-radio.setGroup(1)
-serial.redirectToUSB()
-let RoboterAktiv = true
-basic.forever(function () {
-    if (FunkDatenImpuls) {
-        if (Empfangene_Daten.substr(0, 4) == "send") {
-            if (Empfangene_Daten.substr(0, 5) == "send1") {
-                Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
-                radio.sendString("R1," + convertToText(Sensordaten))
-                serial.writeValue("R1," + convertToText(Sensordaten), 0)
-            }
+function FunkDatenVerarbeiten (FunkDaten: string) {
+    if (FunkDaten.substr(0, 4) == "send") {
+        if (FunkDaten.substr(0, 5) == "send1") {
+            Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
+            radio.sendString("R1," + convertToText(Sensordaten))
+            serial.writeValue("R1," + convertToText(Sensordaten), 0)
+        }
+    } else {
+        Empfangenes_Array = FunkDaten.split(",")
+        AnzahlRoboter = FunkDaten.substr(0, FunkDaten.indexOf(",") - 1)
+        if (RoboterNummer > parseFloat(AnzahlRoboter)) {
+            RoboterAktiv = false
+            DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
         } else {
-            if (true) {
-            	
-            }
-            Empfangenes_Array = Empfangene_Daten.split(",")
-            Received1 = parseFloat(Empfangenes_Array[0])
-            Received2 = parseFloat(Empfangenes_Array[1])
+            RoboterAktiv = true
+            Received1 = parseFloat(Empfangenes_Array[1])
+            Received2 = parseFloat(Empfangenes_Array[2])
             serial.writeValue("Links", Received1)
             serial.writeValue("Rechts", Received2)
             if (Received1 <= 126) {
@@ -77,10 +53,36 @@ basic.forever(function () {
                     DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
                 }
             }
-            FunkDatenImpuls = false
         }
     }
-    if (RoboterAktiv == false) {
-        DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
-    }
+}
+// Zum testen
+radio.onReceivedString(function (receivedString) {
+    FunkDatenVerarbeiten(receivedString)
+})
+/**
+ * Motor Richtung:
+ * 
+ * Wahr - Vorwärts oder Stillstand
+ * 
+ * Falsch - Rückwärts
+ */
+let Motor_Rechts = 0
+let Motor_Rechts_Richtung = false
+let Motor_Links = 0
+let Motor_Links_Richtung = false
+let Received2 = 0
+let Received1 = 0
+let AnzahlRoboter = ""
+let Empfangenes_Array: string[] = []
+let Sensordaten = ""
+let RoboterNummer = 0
+let RoboterAktiv = false
+DFRobotMaqueenPlus.I2CInit()
+radio.setGroup(1)
+serial.redirectToUSB()
+RoboterAktiv = true
+RoboterNummer = 1
+basic.forever(function () {
+	
 })
