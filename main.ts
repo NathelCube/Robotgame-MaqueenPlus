@@ -7,8 +7,8 @@ function FunkDatenVerarbeiten (FunkDaten: string) {
         }
     } else {
         Empfangenes_Array = FunkDaten.split(",")
-        AnzahlRoboter = FunkDaten.substr(0, FunkDaten.indexOf(",") - 1)
-        if (RoboterNummer > parseFloat(AnzahlRoboter)) {
+        AnzahlRoboter = parseFloat(Empfangenes_Array[0])
+        if (RoboterNummer > AnzahlRoboter) {
             RoboterAktiv = false
             DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
         } else {
@@ -73,7 +73,7 @@ let Motor_Links = 0
 let Motor_Links_Richtung = false
 let Received2 = 0
 let Received1 = 0
-let AnzahlRoboter = ""
+let AnzahlRoboter = 0
 let Empfangenes_Array: string[] = []
 let Sensordaten = ""
 let RoboterNummer = 0
