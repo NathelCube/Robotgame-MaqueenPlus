@@ -33,21 +33,25 @@
  * 
  * Falsch - Rückwärts
  */
+/**
+ * Hier die Roboternummer reinschreiben und dann das Programm auf den jeweiligen Microbit laden
+ */
 function FunkDatenVerarbeiten (FunkDaten: string) {
     if (FunkDaten.substr(0, 1) == "R") {
         DatenArt = "Fremde Sensordaten"
     } else if (FunkDaten.substr(0, 4) == "send") {
-        if (FunkDaten.substr(0, 5) == "send1") {
+        if (FunkDaten.substr(0, 5) == "send" + RoboterNummer) {
             DatenArt = "Sendeaufforderung"
             Sensordaten = "" + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.L1) + "," + DFRobotMaqueenPlus.readPatrolVoltage(Patrol.R1)
-            radio.sendString("R1," + convertToText(Sensordaten))
-            serial.writeValue("R1," + convertToText(Sensordaten), 0)
+            radio.sendString("R" + RoboterNummer + "," + convertToText(Sensordaten))
+            serial.writeValue("R" + RoboterNummer + "," + convertToText(Sensordaten), 0)
         } else {
             DatenArt = "Fremde Sendeaufforderung"
         }
     } else {
         DatenArt = "MotorBefehle"
-        VerbindungOK = true
+        serial.writeValue(FunkDaten, 0)
+        LaufzeitZuletzt = control.millis()
         FunkverbindungZähler = 0
         Empfangenes_Array = FunkDaten.split(",")
         AnzahlRoboter = parseFloat(Empfangenes_Array[0])
@@ -56,8 +60,8 @@ function FunkDatenVerarbeiten (FunkDaten: string) {
             DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
         } else {
             RoboterAktiv = true
-            Received1 = parseFloat(Empfangenes_Array[1])
-            Received2 = parseFloat(Empfangenes_Array[2])
+            Received1 = parseFloat(Empfangenes_Array[1 + (RoboterNummer - 1) * 2])
+            Received2 = parseFloat(Empfangenes_Array[2 + (RoboterNummer - 1) * 2])
             serial.writeValue("Links", Received1)
             serial.writeValue("Rechts", Received2)
             if (Received1 <= 126) {
@@ -79,30 +83,77 @@ function FunkDatenVerarbeiten (FunkDaten: string) {
             } else {
                 Motor_Rechts_Richtung = true
                 Motor_Rechts = Math.map(Received2, 128, 255, 0, 255)
-                if (Motor_Links_Richtung) {
-                    DFRobotMaqueenPlus.mototRun(Motors.M1, Dir.CW, Motor_Links)
-                } else {
-                    DFRobotMaqueenPlus.mototRun(Motors.M1, Dir.CCW, Motor_Links)
-                }
-                if (Motor_Rechts_Richtung) {
-                    DFRobotMaqueenPlus.mototRun(Motors.M2, Dir.CW, Motor_Rechts)
-                } else {
-                    DFRobotMaqueenPlus.mototRun(Motors.M2, Dir.CCW, Motor_Rechts)
-                }
-                if (input.buttonIsPressed(Button.A)) {
-                    DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 76)
-                }
-                if (input.buttonIsPressed(Button.B)) {
-                    DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
-                }
+            }
+            if (Motor_Links_Richtung) {
+                DFRobotMaqueenPlus.mototRun(Motors.M1, Dir.CW, Motor_Links)
+            } else {
+                DFRobotMaqueenPlus.mototRun(Motors.M1, Dir.CCW, Motor_Links)
+            }
+            if (Motor_Rechts_Richtung) {
+                DFRobotMaqueenPlus.mototRun(Motors.M2, Dir.CW, Motor_Rechts)
+            } else {
+                DFRobotMaqueenPlus.mototRun(Motors.M2, Dir.CCW, Motor_Rechts)
             }
         }
     }
 }
+input.onButtonPressed(Button.A, function () {
+    basic.showLeds(`
+        . . . . #
+        . # . # .
+        . . # . .
+        . . . . .
+        . . . . .
+        `)
+})
 // Zum testen
 radio.onReceivedString(function (receivedString) {
     FunkDatenVerarbeiten(receivedString)
 })
+input.onButtonPressed(Button.B, function () {
+    if (RoboterNummer == 1) {
+        basic.showLeds(`
+            . . # . .
+            . # # . .
+            . . # . .
+            . . # . .
+            . . # . .
+            `)
+    } else if (RoboterNummer == 2) {
+        basic.showLeds(`
+            . # # . .
+            # . . # .
+            . . # . .
+            . # . . .
+            # # # # .
+            `)
+    } else if (RoboterNummer == 3) {
+        basic.showLeds(`
+            . # # # .
+            . . . . #
+            . . # # #
+            . . . . #
+            . # # # .
+            `)
+    } else if (RoboterNummer == 4) {
+        basic.showLeds(`
+            . . # # .
+            . # . # .
+            # # # # #
+            . . . # .
+            . . . # .
+            `)
+    } else {
+        basic.showLeds(`
+            . # # # .
+            . . . # .
+            . . # . .
+            . . . . .
+            . . # . .
+            `)
+    }
+})
+let VerbindungOK = false
 let Motor_Rechts = 0
 let Motor_Rechts_Richtung = false
 let Motor_Links = 0
@@ -112,7 +163,7 @@ let Received1 = 0
 let AnzahlRoboter = 0
 let Empfangenes_Array: string[] = []
 let FunkverbindungZähler = 0
-let VerbindungOK = false
+let LaufzeitZuletzt = 0
 let Sensordaten = ""
 let DatenArt = ""
 let RoboterNummer = 0
@@ -124,12 +175,18 @@ RoboterAktiv = true
 RoboterNummer = 1
 let MotordatenSendeGeschwindigkeit = 50
 basic.forever(function () {
-	
-})
-loops.everyInterval(200, function () {
-    if (FunkverbindungZähler >= 2) {
+    if (control.millis() - LaufzeitZuletzt >= 1000) {
+        LaufzeitZuletzt = control.millis()
         VerbindungOK = false
         DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
+        basic.showLeds(`
+            # . # . .
+            . # . . .
+            # . # . .
+            . . . . .
+            . . . . .
+            `)
+    } else {
+        VerbindungOK = true
     }
-    FunkverbindungZähler += 1
 })
