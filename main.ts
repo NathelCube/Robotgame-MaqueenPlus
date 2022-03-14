@@ -24,9 +24,6 @@
  * [R2,2757,2856]
  */
 /**
- * Wenn 200-400millisekunden lang, keine neuen Motorbefehle kommen, bleibt der Roboter stehen
- */
-/**
  * Motor Richtung:
  * 
  * Wahr - Vorwärts oder Stillstand
@@ -35,6 +32,9 @@
  */
 /**
  * Hier die Roboternummer reinschreiben und dann das Programm auf den jeweiligen Microbit laden
+ */
+/**
+ * Wenn 200-400millisekunden lang, keine neuen Motorbefehle kommen, bleibt der Roboter stehen
  */
 function FunkDatenVerarbeiten (FunkDaten: string) {
     if (FunkDaten.substr(0, 1) == "R") {
@@ -49,19 +49,14 @@ function FunkDatenVerarbeiten (FunkDaten: string) {
             DatenArt = "Fremde Sendeaufforderung"
         }
     } else {
-        DatenArt = "MotorBefehle"
-        serial.writeValue(FunkDaten, 0)
-        LaufzeitZuletzt = control.millis()
-        FunkverbindungZähler = 0
         Empfangenes_Array = FunkDaten.split(",")
-        AnzahlRoboter = parseFloat(Empfangenes_Array[0])
-        if (RoboterNummer > AnzahlRoboter) {
-            RoboterAktiv = false
-            DFRobotMaqueenPlus.mototRun(Motors.ALL, Dir.CW, 0)
-        } else {
+        if (Empfangenes_Array[2] == convertToText(RoboterNummer)) {
+            DatenArt = "MotorBefehleAnMich"
+            LaufzeitZuletzt = control.millis()
+            FunkverbindungZähler = 0
             RoboterAktiv = true
-            Received1 = parseFloat(Empfangenes_Array[1 + (RoboterNummer - 1) * 2])
-            Received2 = parseFloat(Empfangenes_Array[2 + (RoboterNummer - 1) * 2])
+            Received1 = parseFloat(Empfangenes_Array[0])
+            Received2 = parseFloat(Empfangenes_Array[1])
             serial.writeValue("Links", Received1)
             serial.writeValue("Rechts", Received2)
             if (Received1 <= 126) {
@@ -94,8 +89,11 @@ function FunkDatenVerarbeiten (FunkDaten: string) {
             } else {
                 DFRobotMaqueenPlus.mototRun(Motors.M2, Dir.CCW, Motor_Rechts)
             }
+        } else {
+            DatenArt = "FremdeMotorBefehle"
         }
     }
+    serial.writeValue(DatenArt, 0)
 }
 input.onButtonPressed(Button.A, function () {
     basic.showLeds(`
@@ -109,6 +107,7 @@ input.onButtonPressed(Button.A, function () {
 // Zum testen
 radio.onReceivedString(function (receivedString) {
     FunkDatenVerarbeiten(receivedString)
+    serial.writeValue(receivedString, 0)
 })
 input.onButtonPressed(Button.B, function () {
     if (RoboterNummer == 1) {
@@ -160,10 +159,9 @@ let Motor_Links = 0
 let Motor_Links_Richtung = false
 let Received2 = 0
 let Received1 = 0
-let AnzahlRoboter = 0
-let Empfangenes_Array: string[] = []
 let FunkverbindungZähler = 0
 let LaufzeitZuletzt = 0
+let Empfangenes_Array: string[] = []
 let Sensordaten = ""
 let DatenArt = ""
 let RoboterNummer = 0
